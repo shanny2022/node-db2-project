@@ -1,19 +1,11 @@
-const express = require("express")
-const carsRouter = require('./cars/cars-router')
-const server = express()
+const express = require("express");
+const app = express();
+const carsRouter = require("./cars/cars-router");
+app.use("/api/cars", carsRouter);
+app.use((error, request, response, _next) => { // eslint-disable-line no-unused-vars
+    response.status(error.status || 500).json({
+      message: error.message,
+    });
+  });
 
-server.use(express.json())
-
-server.use('/api/cars', carsRouter)
-
-server.use('*', (req, res, next) => {
-    next({ status: 404, message: 'Not found.'})
-})
-
-server.use((err, req, res, next) => { //eslint-disable-line
-    res.status(err.status || 500).json({
-        message: err.message
-    })
-})
-
-module.exports = server
+module.exports = app;

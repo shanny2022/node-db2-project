@@ -1,23 +1,34 @@
-const express = require('express')
-const Car = require('./cars-model')
+const express = require('express');
 
-const router = express.Router()
+const Cars = require('./cars-model');
 
-router.get('/', async (req, res, next) => {
+const { checkCarId, checkCarPayload, checkVinNumberValid, checkVinNumberUnique } = require('./cars-middleware');
+
+const router = express.Router();
+
+router.get('/', async (request, response, next) => {
     try {
-        const cars = await Car.getAll()
-        res.json(cars)
-    } catch (err) {
-        next(err)
+        const cars = await Cars.getAll();
+        response.json(cars);
+    } catch (error) {
+        next(error);
     }
-})
+});
 
-router.get('/:id', (req, res) => {
-    res.json(`get car by id ${req.params.id}`)
-})
+router.get('/:id', checkCarId, (request, response, next) => {
+    try {
+        response.json(request.car);
+    } catch (error) {
+        next(error);
+    }
+});
 
-router.post('/', (req, res) => {
-    res.json('creating new car')
-})
-
+router.post('/', checkCarPayload, checkVinNumberValid, checkVinNumberUnique, async (request, response, next) => {
+    try {
+        const newCar = await Cars.create(request.body);
+        response.status(201).json(newCar);
+    } catch (error) {
+        next(error);
+    }
+});
 module.exports = router;

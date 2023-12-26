@@ -1,4 +1,4 @@
-const database = require('../data/db-config');
+const database = require('../../data/db-config');
 
 const getAll = () => {
   return database('cars');
