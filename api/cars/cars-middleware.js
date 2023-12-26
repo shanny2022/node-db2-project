@@ -16,19 +16,24 @@ const checkCarId = async (request, response, next) => {
   }
 };
 
-const checkCarPayload = (request, response, next) => {
-  const { vin, make, model, mileage } = request.body;
-  if (!vin) {
-    next({ status: 400, message: 'vin is missing' });
-  } else if (!make) {
-    next({ status: 400, message: 'make is missing' });
-  } else if (!model) {
-    next({ status: 400, message: 'model is missing' });
-  } else if (!mileage) {
-    next({ status: 400, message: 'mileage is missing' });
-  } else {
-    next();
+const checkCarPayload = (req, res, next) => {
+  if (!req.body) {
+    return res.status(400).json({ message: 'missing car data' });
   }
+  const { vin, model, make, mileage } = req.body;
+  if (!vin) {
+    return res.status(400).json({ message: 'missing required vin field' });
+  }
+  if (!model) {
+    return res.status(400).json({ message: 'missing required model field' });
+  }
+  if (!make) {
+    return res.status(400).json({ message: 'missing required make field' });
+  }
+  if (mileage === undefined) {
+    return res.status(400).json({ message: 'missing required mileage field' });
+  }
+  next();
 };
 
 const checkVinNumberValid = (request, response, next) => {
