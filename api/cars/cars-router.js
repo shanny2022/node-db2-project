@@ -1,49 +1,32 @@
-const Cars = require("./cars-model");
-const router = require("express").Router();
-const {
-    checkCarId,
-    checkCarPayload,
-    checkVinNumberValid,
-    checkVinNumberUnique
-} = require("./cars-middleware");
+/* eslint-disable no-unused-vars */
+const express = require('express');
 
-router.get("/", (req, res, next) => {
-    Cars.getAll()
-        .then( cars => res.json(cars))
-        .catch(next);
-});
+const Cars = require('./cars-model');
 
-router.get("/:id", checkCarId, (req, res, next) => {
-    Cars.getById(req.params.id)
-        .then( car => res.json(car))
-        .catch(next);
-});
-router.post('/', async (req, res) => {
-    const { vin, make, model, mileage } = req.body;
-    if (!vin || !make || !model || !mileage) {
-      return res.status(400).json({ message: 'vin, make, model and mileage are required' });
-    }
+const { checkCarId, checkCarPayload, checkVinNumberValid, checkVinNumberUnique } = require('./cars-middleware');
+
+const router = express.Router();
+
+router.get('/', async (request, response, next) => {
     try {
-      const existingCar = await Cars.getByVin(vin);
-      if (existingCar) {
-        return res.status(400).json({ message: `vin ${vin} already exists` });
-      }
-      const newCar = await Cars.create(req.body);
-      res.status(201).json(newCar);
-    } catch (err) {
-      res.status(500).json({ message: 'Failed to create new car' });
+        const cars = await Cars.getAll();
+        response.json(cars);
+    } catch (error) {
+        next(error);
     }
-  });
-router.post("/",
-    checkCarPayload,
-    checkVinNumberValid,
-    checkVinNumberUnique,
+});
 
-    (req, res, next) => {
-        Cars.create(req.body)
-            .then( newCar => res.status(201).json(newCar))
-            .catch(next);
+router.get('/:id', checkCarId, (request, response, next) => {
+    response.json(request.car);
+});
+
+router.post('/', checkCarPayload, checkVinNumberValid, checkVinNumberUnique, async (request, response, next) => {
+    try {
+        const newCar = await Cars.create(request.body);
+        response.status(201).json(newCar);
+    } catch (error) {
+        next(error);
     }
-);
+});
 
 module.exports = router;

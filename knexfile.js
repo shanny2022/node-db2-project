@@ -1,4 +1,3 @@
-// no need to change this file
 const sharedConfig = {
   client: 'sqlite3',
   useNullAsDefault: true,

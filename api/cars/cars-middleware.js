@@ -1,57 +1,63 @@
-const Cars = require("./cars-model");
+const Cars = require('./cars-model');
 
-const vinValidator = require("vin-validator");
+const vinValidator = require('vin-validator');
 
-const checkCarId = async (req, res, next) => {
-  const { id } = req.params;
-
-  const car = await Cars.getById(id);
-  if(car) next();
-  else next( {
-    status: 404,
-    message: `car with id ${id} is not found`
-  })
-}
-
-const checkCarPayload = (req, res, next) => {
-  const errObj = { status: 400 };
-
-  const requiredFields = ["vin", "make", "model", "mileage"];
-
-  for (const field of requiredFields) {
-    if(!req.body[field]) errObj.message = `${field} is missing`;
+const checkCarId = async (request, response, next) => {
+  try {
+    const car = await Cars.getById(request.params.id);
+    if (!car) {
+      next({ status: 404, message: `car with id ${request.params.id} is not found` });
+    } else {
+      request.car = car;
+      next();
+    }
+  } catch (error) {
+    next(error);
   }
+};
 
-  if(errObj.message) next(errObj);
-  else next();
-}
+const checkCarPayload = (request, response, next) => {
+  const { vin, make, model, mileage } = request.body;
+  if (!vin) {
+    next({ status: 400, message: 'vin is missing' });
+  } else if (!make) {
+    next({ status: 400, message: 'make is missing' });
+  } else if (!model) {
+    next({ status: 400, message: 'model is missing' });
+  } else if (!mileage) {
+    next({ status: 400, message: 'mileage is missing' });
+  } else {
+    next();
+  }
+};
 
-const checkVinNumberValid = (req, res, next) => {
+const checkVinNumberValid = (request, response, next) => {
+  const { vin } = request.body;
+  const isValidVin = vinValidator.validate(vin);
+  if (!isValidVin) {
+    next({ status: 400, message: `vin ${vin} is invalid` });
+  } else {
+    next();
+  }
+};
 
-  const { vin } = req.body;
-
-  if(vinValidator.validate(vin)) next();
-  else next( {
-    status: 400,
-    message: `vin ${vin} is invalid`
-  })
-}
-
-const checkVinNumberUnique = async (req, res, next) => {
-
-  const { vin } = req.body;
-  const car = await Cars.getByVin (vin);
-
-  if(!car) next();
-  else next( {
-    status: 400,
-    message: `vin ${vin} already exists`
-  })
-}
+const checkVinNumberUnique = async (request, response, next) => {
+  try {
+    const { vin } = request.body;
+    const existingCar = await Cars.getByVin(vin);
+    if (existingCar) {
+      next({ status: 400, message: `vin ${vin} already exists` });
+    } else {
+      next();
+    }
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   checkCarId,
   checkCarPayload,
   checkVinNumberValid,
   checkVinNumberUnique
-}
+};
