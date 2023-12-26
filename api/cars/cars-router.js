@@ -1,6 +1,7 @@
 const express = require('express');
 const Cars = require('./cars-model'); // Assuming you have a cars-model.js file that exports the model functions
 const router = express.Router();
+const { checkVinNumberUnique } = require('./cars-middleware');
 
 // [GET] /api/cars
 router.get('/', async (req, res) => {
@@ -28,14 +29,14 @@ router.get('/:id', async (req, res) => {
 });
 
 // [POST] /api/cars
-router.post('/', async (req, res) => {
-  const newCar = req.body;
-  try {
-    const car = await Cars.create(newCar); // Assuming you have a create function in your model
-    res.status(201).json(car);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to create new car' });
-  }
-});
+router.post('/', checkVinNumberUnique, async (req, res) => {
+    const newCar = req.body;
+    try {
+      const car = await Cars.create(newCar);
+      res.status(201).json(car);
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to create new car' });
+    }
+  });
 
 module.exports = router;
